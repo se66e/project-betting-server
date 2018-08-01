@@ -12,6 +12,11 @@ const eventRouter = require('./routes/events');
 const app = express();
 
 // ----- Connect to DB ----- \\
+mongoose.Promise = Promise;
+mongoose.connect('mongodb://localhost/bettings', {
+  keepAlive: true,
+  reconnectTries: Number.MAX_VALUE
+});
 
 // ----- Middlewares ----- \\
 
