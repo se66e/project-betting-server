@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -13,7 +14,7 @@ const app = express();
 
 // ----- Connect to DB ----- \\
 mongoose.Promise = Promise;
-mongoose.connect('mongodb://localhost/bettings', {
+mongoose.connect(process.env.MONGODB_URI, {
   keepAlive: true,
   reconnectTries: Number.MAX_VALUE
 });
@@ -28,7 +29,7 @@ app.use(cookieParser());
 // ----- CORS ----- \\
 app.use(cors({
   credentials: true,
-  origin: ['http://localhost:4200']
+  origin: [process.env.CLIENT_URL]
 }));
 
 // ----- Session ----- \\
@@ -47,7 +48,7 @@ app.use(session({
 
 // ----- Routes Setup ----- \\
 
-app.use('/', authRouter);
+app.use('/auth', authRouter);
 app.use('/events', eventRouter);
 
 // ----- 404 and Error handler ----- \\
