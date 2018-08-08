@@ -54,7 +54,7 @@ router.get('/:id', (req, res, next) => {
     res.status(404).json({ code: 'not-found' });
     return next();
   }
-  Event.findById(req.params.id).populate('applications applications.user')
+  Event.findById(req.params.id).populate('applications applications.user').populate('owner owner.user')
     .then((result) => {
       res.json(result);
     })
