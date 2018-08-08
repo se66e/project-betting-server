@@ -54,7 +54,7 @@ router.get('/:id', (req, res, next) => {
     res.status(404).json({ code: 'not-found' });
     return next();
   }
-  Event.findById(req.params.id)
+  Event.findById(req.params.id).populate('applications')
     .then((result) => {
       res.json(result);
     })
@@ -70,20 +70,43 @@ router.post('/:id/apply', (req, res, next) => {
   } else {
     console.log(req.session.currentUser);
     const eventId = req.params.id;
-    const update = { $push: { applications: { owner: req.session.currentUser._id } } };
     Event.findById(eventId)
       .then((result) => {
         const ownerId = result.owner._id.toString();
         if (ownerId !== req.session.currentUser._id) {
-          Event.findByIdAndUpdate(eventId, update);
-          res.json(result);
-          console.log(result);
+          Event.findByIdAndUpdate(eventId, { $push: { applications: { user: req.session.currentUser._id } } })
+            .then(re => {
+              res.json(re);
+              console.log(re);
+            });
         } else {
-          res.status(401).json({ code: 'unauthorized' });
+          res.status(406).json({ code: 'not-acceptable' });
         }
       })
       .catch(next);
   };
+});
+
+router.put('/:id/apply/:apId/reject', (req, res, next) => {
+  const eventId = req.params.id;
+  const removeId = { $pull: { applications: { owner: req.body.user } } };
+  const updateStatus = { $push: { applications: { status: 'rejected' } } };
+  Event.findByIdAndUpdate(eventId, removeId, updateStatus)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch(next);
+});
+
+router.put('/:id/apply/:apId/accept', (req, res, next) => {
+  const eventId = req.params.id;
+  const keepId = { $find: { applications: { owner: req.body.user } } };
+  const updateStatus = { $push: { applications: { status: 'accepted' } } };
+  Event.findByIdAndUpdate(eventId, keepId, updateStatus)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch(next);
 });
 
 module.exports = router;
