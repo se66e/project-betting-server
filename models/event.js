@@ -28,8 +28,8 @@ const eventSchema = new Schema({
     type: String
   },
   applications: [{
-    user: {
-      type: ObjectId,
+    owner: {
+      type: [ObjectId],
       ref: 'User'
     },
     status: {

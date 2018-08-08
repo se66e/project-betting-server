@@ -53,36 +53,53 @@ router.get('/:id', (req, res, next) => {
   if (!validId) {
     res.status(404).json({ code: 'not-found' });
     return next();
-  } else {
-    Event.findById(req.params.id).populate('applications')
-      .then((result) => {
-        res.json(result);
-      })
-      .catch(next);
   }
+  Event.findById(req.params.id)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch(next);
 });
-
-// const data = {
-//   event: result,
-//   owner: result.owner._id.toString() === req.session.currentUser._id,
-//   applicants: !!result.applications.find((user) => user.toString() === req.session.currentUser._id)
 
 // ----- POST one event page and update ----- \\
 
 router.post('/:id/apply', (req, res, next) => {
   if (!req.session.currentUser) {
     res.status(401).json({ code: 'unauthorized' });
-    // return next();
+    return next();
   } else {
+    console.log(req.session.currentUser);
     const eventId = req.params.id;
-    const filter = { _id: eventId };
-    const update = { $push: { applications: req.session.currentUser._id } };
-    Event.update(filter, update)
+    const update = { $push: { applications: { owner: req.session.currentUser._id } } };
+    Event.findById(eventId)
       .then((result) => {
-        res.json(result);
+        const ownerId = result.owner._id.toString();
+        if (ownerId !== req.session.currentUser._id) {
+          Event.findByIdAndUpdate(eventId, update);
+          res.json(result);
+          console.log(result);
+        } else {
+          res.status(401).json({ code: 'unauthorized' });
+        }
       })
       .catch(next);
   };
 });
 
 module.exports = router;
+
+// router.post('/:id/apply', (req, res, next) => {
+//   const eventId = req.params.id;
+//   if (!req.session.currentUser) {
+//     res.status(401).json({ code: 'unauthorized' });
+//     return next();
+//   } else {
+//     console.log(req.session.currentUser);
+//     const update = { $push: { applications: { owner: req.session.currentUser._id } } };
+//     Event.findByIdAndUpdate(eventId, update)
+//       .then((result) => {
+//         res.json(result);
+//       })
+//       .catch(next);
+//   };
+// });
