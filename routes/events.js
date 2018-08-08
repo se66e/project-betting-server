@@ -54,7 +54,7 @@ router.get('/:id', (req, res, next) => {
     res.status(404).json({ code: 'not-found' });
     return next();
   }
-  Event.findById(req.params.id).populate('applications')
+  Event.findById(req.params.id).populate('applications applications.user')
     .then((result) => {
       res.json(result);
     })
@@ -68,7 +68,6 @@ router.post('/:id/apply', (req, res, next) => {
     res.status(401).json({ code: 'unauthorized' });
     return next();
   } else {
-    console.log(req.session.currentUser);
     const eventId = req.params.id;
     Event.findById(eventId)
       .then((result) => {
@@ -77,7 +76,6 @@ router.post('/:id/apply', (req, res, next) => {
           Event.findByIdAndUpdate(eventId, { $push: { applications: { user: req.session.currentUser._id } } })
             .then(re => {
               res.json(re);
-              console.log(re);
             });
         } else {
           res.status(406).json({ code: 'not-acceptable' });
@@ -87,22 +85,21 @@ router.post('/:id/apply', (req, res, next) => {
   };
 });
 
-router.put('/:id/apply/:apId/reject', (req, res, next) => {
+router.put('/:id/reject', (req, res, next) => {
+  console.log(req.body);
+  const appId = req.body.applicationId;
   const eventId = req.params.id;
-  const removeId = { $pull: { applications: { owner: req.body.user } } };
-  const updateStatus = { $push: { applications: { status: 'rejected' } } };
-  Event.findByIdAndUpdate(eventId, removeId, updateStatus)
+  Event.update({ '_id': eventId, 'applications.user': appId }, { $set: { 'applications.$.status': 'rejected' } })
     .then((result) => {
       res.json(result);
     })
     .catch(next);
 });
 
-router.put('/:id/apply/:apId/accept', (req, res, next) => {
+router.put('/:id/accept', (req, res, next) => {
+  const appId = req.body.applicationId;
   const eventId = req.params.id;
-  const keepId = { $find: { applications: { owner: req.body.user } } };
-  const updateStatus = { $push: { applications: { status: 'accepted' } } };
-  Event.findByIdAndUpdate(eventId, keepId, updateStatus)
+  Event.update({ '_id': eventId, 'applications.user': appId }, { $set: { 'applications.$.status': 'accepted' } })
     .then((result) => {
       res.json(result);
     })
@@ -110,6 +107,8 @@ router.put('/:id/apply/:apId/accept', (req, res, next) => {
 });
 
 module.exports = router;
+
+// const updateStatus = { '$set': { 'applications.$.status': 'accepted' } };
 
 // router.post('/:id/apply', (req, res, next) => {
 //   const eventId = req.params.id;
