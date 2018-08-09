@@ -6,7 +6,7 @@ const Mongoose = require('mongoose');
 // ----- GET events-list page ----- \\
 
 router.get('/', (req, res, next) => {
-  Event.find().populate('owner')
+  Event.find().populate('owner').populate('applications applications.user')
     .then((result) => {
       res.json(result);
     })
@@ -22,6 +22,7 @@ router.get('/my-events', (req, res, next) => {
       res.json(result);
     });
 });
+
 // ----- Create event-page ----- \\
 
 router.post('/', (req, res, next) => {
@@ -107,21 +108,3 @@ router.put('/:id/accept', (req, res, next) => {
 });
 
 module.exports = router;
-
-// const updateStatus = { '$set': { 'applications.$.status': 'accepted' } };
-
-// router.post('/:id/apply', (req, res, next) => {
-//   const eventId = req.params.id;
-//   if (!req.session.currentUser) {
-//     res.status(401).json({ code: 'unauthorized' });
-//     return next();
-//   } else {
-//     console.log(req.session.currentUser);
-//     const update = { $push: { applications: { owner: req.session.currentUser._id } } };
-//     Event.findByIdAndUpdate(eventId, update)
-//       .then((result) => {
-//         res.json(result);
-//       })
-//       .catch(next);
-//   };
-// });
